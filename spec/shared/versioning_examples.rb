@@ -105,6 +105,37 @@ shared_examples_for 'versioning' do
         expect(last_response.body).to eq('v2')
       end
     end
+
+    context 'catch-all' do
+      before do
+        subject.version 'v1', macro_options
+        subject.get 'version' do
+          'v1'
+        end
+
+        subject.format :txt
+        subject.version 'v2', macro_options
+        subject.get 'version' do
+          'v2'
+        end
+
+        subject.route :any, '*path' do
+          error!('Not Found', 404)
+        end
+      end
+
+      it 'finds v1 of the endpoint' do
+        versioned_get '/version', 'v1', macro_options
+        expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq('v1')
+      end
+
+      it 'finds v2 of the endpoint' do
+        versioned_get '/version', 'v2', macro_options
+        expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq('v2')
+      end
+    end
   end
 
   context 'with before block defined within a version block' do
